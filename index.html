@@ -3,29 +3,251 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Responsive Sidebar</title>
+<title>Audio Uploader</title>
 <style>
-body {
-  font-family: "Arial", sans-serif;
-  margin: 0;
+    body {
+        background-color: pink;
+        font-family: Arial, sans-serif;
+    }
+
+    #uploadForm {
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 400px;
+        margin: 50px auto;
+        text-align: center;
+    }
+
+    #output {
+        margin-top: 20px;
+    }
+
+    #loading {
+        display: none;
+    }
+
+    .upload-button {
+        background-color: #ff69b4; /* pink */
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .upload-button:hover {
+        background-color: #d8559a; /* darker pink */
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .custom-file-upload {
+        border: 1px solid #ccc;
+        display: inline-block;
+        padding: 6px 12px;
+        cursor: pointer;
+        border-radius: 5px;
+        background-color: #f8f8f8;
+    }
+
+    .custom-file-upload:hover {
+        background-color: #e0e0e0;
+    }
+
+    .loading-spinner {
+        border: 5px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 5px solid #ff69b4; /* pink */
+        width: 50px;
+        height: 50px;
+        -webkit-animation: spin 2s linear infinite; /* Safari */
+        animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+        0% { -webkit-transform: rotate(0deg); }
+        100% { -webkit-transform: rotate(360deg); }
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    #fileName {
+        margin-top: 10px;
+        font-style: italic;
+        color: #666; /* Dark gray */
+    }
+
+    #copyUrl {
+        margin-top: 10px;
+        background-color: #0066ff; /* blue */
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    #copyUrl:hover {
+        background-color: #0052cc; /* darker blue */
+    }
+
+    #copyright {
+        margin-top: 20px;
+        color: rgba(0, 0, 0, 0.5); /* Translucent black */
+    }
+</style>
+</head>
+<body>
+<div id="uploadForm">
+    <h2>Upload Audio</h2>
+    <label for="audioFile" class="custom-file-upload">
+        Select File
+    </label>
+    <input type="file" id="audioFile" class="file-input" accept="audio/*">
+    <p id="fileName"></p>
+    <button class="upload-button" onclick="uploadAudio()">Upload</button>
+    <div id="loading">
+        <div class="loading-spinner"></div>
+        <p>Uploading...</p>
+    </div>
+    <div id="output"></div>
+    <button id="copyUrl" onclick="copyUrl()">Copy URL</button>
+</div>
+
+<script>
+function uploadAudio() {
+    const fileInput = document.getElementById('audioFile');
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('audio', file);
+
+    // Tampilkan loading spinner
+    document.getElementById('loading').style.display = 'block';
+
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const outputDiv = document.getElementById('output');
+        const audioUrl = data.fileUrl;
+        outputDiv.innerHTML = `<p>Audio uploaded successfully!</p><p>URL: <a href="${audioUrl}" target="_blank">${audioUrl}</a></p>`;
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        const outputDiv = document.getElementById('output');
+        outputDiv.innerHTML = '<p>Error uploading audio.</p>';
+    })
+    .finally(() => {
+        // Sembunyikan loading spinner setelah selesai
+        document.getElementById('loading').style.display = 'none';
+    });
 }
 
-.sidebar {
-  height: 100%;
-  width: 0;
-  position: fixed;
-  top: 0;
-  right: 0;
-  background-color: #111;
-  overflow-x: hidden;
-  transition: 0.5s;
-  padding-top: 60px;
+function copyUrl() {
+    const outputDiv = document.getElementById('output');
+    const urlElement = outputDiv.querySelector('a');
+    const url = urlElement.href;
+
+    // Salin URL ke clipboard
+    navigator.clipboard.writeText(url).then(() => {
+        alert('URL copied to clipboard: ' + url);
+    }).catch(err => {
+        console.error('Failed to copy URL: ', err);
+    });
 }
 
-.sidebar a {
-  padding: 10px 15px;
-  text-decoration: none;
-  font-size: 20px;
-  color: #818181;
-  display: block;
+// Update nama file yang dipilih
+document.getElementById('audioFile').addEventListener('change', function() {
+    const fileName = this.files[0].name;
+    document.getElementById('fileName').textContent = 'Selected file: ' + fileName;
+});    
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidebar</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .sidebar {
+            height: 100%;
+            width: 200px;
+            position: fixed;
+            top: 0;
+            left: -200px;
+            background-color: #333;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+        }
+        .sidebar a {
+            padding: 10px 15px;
+            text-decoration: none;
+            font-size: 18px;
+            color: white;
+            display: block;
+            transition: 0.3s;
+        }
+        .sidebar a:hover {
+            background-color: #555;
+        }
+        .openbtn {
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #333;
+            color: white;
+            border: none;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 9999;
+        }
+        .openbtn:hover {
+            background-color: #444;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar" id="mySidebar">
+    <a href="https://vynaavalerie.github.io/pinaa/">About</a>
+    <a href="https://wa.me/6282389924037">Contacts</a>
+    <a href="https://www.vynaachan-api.shop">Blog</a>
+    <a href="https://whatsapp.com/channel/0029VaHPYh6LNSa81M9Xcq1K">API Documentation</a>
+</div>
+
+<button class="openbtn" onclick="toggleSidebar()">☰</button>
+
+<script>
+    function toggleSidebar() {
+        var sidebar = document.getElementById("mySidebar");
+        if (sidebar.style.left === "0px") {
+            sidebar.style.left = "-200px";
+        } else {
+            sidebar.style.left = "0px";
+        }
+    }
+</script>
+
+</body>
+</html>
+<footer style="background-color: rgba(128, 128, 128, 0.5); position: fixed; bottom: 0; width: 100%; text-align: center;">
+  <p style="margin: 0;">&copy; 2024 Vynaa Valerie. Semua hak dilindungi undang-undang.</p>
+  </footer>
   
